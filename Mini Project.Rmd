@@ -1,0 +1,222 @@
+---
+title: "Mini Project"
+author: "S/18/834"
+date: "2024-01-26"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(skimr)
+library(janitor)
+```
+
+```{r}
+london_local_data_2022<-read_csv("../Data/london_local_data_2022.csv",col_types = "ffcddddddd")
+london_local_sites<-read_csv("../Data/london_local_sites.csv",col_types = "ffddc")
+```
+
+```{r}
+glimpse(london_local_data_2022)
+glimpse(london_local_sites)
+```
+```{r}
+london_data <- merge(london_local_data_2022, london_local_sites, by = "code",all.x = TRUE)
+```
+
+```{r}
+london_data <- london_data%>%select(-longitude.y, -latitude.y)
+```
+
+```{r}
+skim(london_local_data_2022)
+skim(london_local_sites)
+```
+
+```{r}
+data<-london_local_data_2022%>%filter(is.na(so2))
+```
+
+```{r}
+summary(london_local_data_2022)
+```
+```{r}
+london_local_data_2022<-london_local_data_2022%>%separate(date, into = c("date","time"), sep = 10)
+```
+
+
+```{r}
+london_local_data_2022<-london_local_data_2022%>%
+mutate(month = factor(case_when(
+    month(date)==1 ~ "january",
+    month(date)==2 ~ "february",
+    month(date)==3 ~ "march",
+    month(date)==4 ~ "april",
+    month(date)==5 ~ "may",
+    month(date)==6 ~ "june",
+    month(date)==7 ~ "july",
+    month(date)==8 ~ "august",
+    month(date)==9 ~ "september",
+    month(date)==10 ~ "october",
+    month(date)==11 ~ "november",
+    month(date)==12 ~ "december",
+  )), year = year(date))
+```
+
+```{r}
+london_local_data_2022$month <- factor(london_local_data_2022$month, 
+                                  levels = c("january","february","march","april","may",
+                                "june","july","august","september","october","november","december"))
+```
+
+
+```{r}
+skim(london_local_data_2022)
+str(london_local_data_2022)
+```
+
+```{r}
+nox_boxplot<-london_local_data_2022%>%ggplot(aes(x=month,y=nox))+geom_boxplot(size = 0.5, outlier.size = 0.1) +labs(title = "Boxplot of NOx in London by Month",
+       x = "Month",
+       y = "NOx Value") +
+  theme_minimal()+scale_fill_brewer("Month")
+
+postscript(file = "nox_boxplot.eps",width = 10,height = 8,horizontal = F)
+nox_boxplot
+dev.off()
+
+no2_boxplot<-london_local_data_2022%>%ggplot(aes(x=month,y=no2))+geom_boxplot(size = 0.5, outlier.size = 0.1) +labs(title = "Boxplot of NO2 in London by Month",
+       x = "Month",
+       y = "NO2 Value") +
+  theme_minimal()+scale_fill_brewer("Month")
+
+postscript(file = "no2_boxplot.eps",width = 10,height = 8,horizontal = F)
+no2_boxplot
+dev.off()
+
+no_boxplot<-london_local_data_2022%>%ggplot(aes(x=month,y=no))+geom_boxplot(size = 0.5, outlier.size = 0.1) +labs(title = "Boxplot of NO in London by Month",
+       x = "Month",
+       y = "NO Value") +
+  theme_minimal()+scale_fill_brewer("Month")
+
+postscript(file = "no_boxplot.eps",width = 10,height = 8,horizontal = F)
+no_boxplot
+dev.off()
+
+pm10_boxplot<-london_local_data_2022%>%ggplot(aes(x=month,y=pm10))+geom_boxplot(size = 0.5, outlier.size = 0.1) +labs(title = "Boxplot of PM10 in London by Month",
+       x = "Month",
+       y = "PM10 Value") +
+  theme_minimal()+scale_fill_brewer("Month")
+
+postscript(file = "pm10_boxplot.eps",width = 10,height = 8,horizontal = F)
+pm10_boxplot
+dev.off()
+
+pm2_5_boxplot<-london_local_data_2022%>%ggplot(aes(x=month,y=pm2_5))+geom_boxplot(size = 0.5, outlier.size = 0.1) +labs(title = "Boxplot of PM2.5 in London by Month",
+       x = "Month",
+       y = "PM2.5 Value") +
+  theme_minimal()+scale_fill_brewer("Month")
+
+postscript(file = "pm2_5_boxplot.eps",width = 10,height = 8,horizontal = F)
+pm2_5_boxplot
+dev.off()
+
+so2_boxplot<-london_local_data_2022%>%ggplot(aes(x=month,y=so2))+geom_boxplot(size = 0.5, outlier.size = 0.1) +labs(title = "Boxplot of sO2 in London by Month",
+       x = "Month",
+       y = "so2 Value") +
+  theme_minimal()+scale_fill_brewer("Month")
+
+postscript(file = "so2_boxplot.eps",width = 10,height = 8,horizontal = F)
+so2_boxplot
+dev.off()
+
+```
+
+```{r}
+plot(london_local_data_2022$no2, type = "l")
+```
+
+```{r}
+filter_data_no2<-london_local_data_2022 %>%
+  group_by(site, month) %>%
+  summarise(count=sum(no2))
+```
+
+```{r}
+avg_by_month<-london_local_data_2022%>%group_by(code,site,month)%>%summarise(avg_nox = mean(nox, na.rm = TRUE),
+                                                                             avg_no2 = mean(no2, na.rm = TRUE),
+                                                                             avg_no = mean(no, na.rm = TRUE),
+                                                                             avg_pm10 = mean(pm10, na.rm = TRUE),
+                                                                             avg_o3 = mean(o3, na.rm = TRUE),
+                                                                             avg_pm2_5 = mean(pm2_5, na.rm = TRUE),
+                                                                             avg_so2 = mean(so2, na.rm = TRUE))
+```
+```{r}
+plot <- ggplot(avg_by_month, aes(x = month)) +
+  geom_bar(aes(y = avg_nox), stat = "identity", fill = "red", alpha = 0.5) +
+  geom_bar(aes(y = avg_no2), stat = "identity", fill = "orange", alpha = 0.5) +
+  geom_bar(aes(y = avg_no), stat = "identity", fill = "yellow", alpha = 0.5) +
+  geom_bar(aes(y = avg_pm10), stat = "identity", fill = "green", alpha = 0.5) +
+  geom_bar(aes(y = avg_o3), stat = "identity", fill = "blue", alpha = 0.5) +
+  geom_bar(aes(y = avg_pm2_5), stat = "identity", fill = "violet", alpha = 0.5) +
+  geom_bar(aes(y = avg_so2), stat = "identity", fill = "purple", alpha = 0.5) +
+  labs(title = "Average Pollutant Levels by Month", x = "Month", y = "Average Level") +
+  theme_minimal()
+plot
+
+postscript(file="plot.eps",width=15,height = 10,horizontal = F)
+plot
+dev.off()
+
+plot1 <- ggplot(avg_by_month, aes(x = code)) +
+  geom_bar(aes(y = avg_nox), stat = "identity", fill = "red", alpha = 0.5) +
+  geom_bar(aes(y = avg_no2), stat = "identity", fill = "orange", alpha = 0.5) +
+  geom_bar(aes(y = avg_no), stat = "identity", fill = "yellow", alpha = 0.5) +
+  geom_bar(aes(y = avg_pm10), stat = "identity", fill = "green", alpha = 0.5) +
+  geom_bar(aes(y = avg_o3), stat = "identity", fill = "blue", alpha = 0.5) +
+  geom_bar(aes(y = avg_pm2_5), stat = "identity", fill = "violet", alpha = 0.5) +
+  geom_bar(aes(y = avg_so2), stat = "identity", fill = "purple", alpha = 0.5) +
+  labs(title = "Average Pollutant Levels by Site", x = "Month", y = "Average Level") +
+  theme_minimal()+coord_flip()
+plot1
+
+postscript(file="plot1.eps",width=15,height = 10,horizontal = F)
+plot1
+dev.off()
+
+
+```
+
+
+```{r}
+local_site_data<-london_local_sites%>%select(-Parameter_name)
+london_data<-merge(london_local_data_2022,london_local_sites,by=c("code","site"),all.y = TRUE)
+```
+
+```{r}
+ london_data %>%
+  group_by(site, Parameter_name) %>%
+  summarize(mean = mean(nox, na.rm = TRUE),
+            median = median(nox, na.rm = TRUE),
+            min = min(nox, na.rm = TRUE),
+            max = max(nox, na.rm = TRUE),
+            sd = sd(nox, na.rm = TRUE))
+```
+
+```{r}
+totall_pollutant<-london_local_data_2022%>%group_by(code)%>%summarise(total=sum(no2,nox,no,pm10,pm2_5,o3,so2))
+```
+
+```{r}
+totall_pollutant_in_each_month<-london_local_data_2022%>%group_by(code)%>%summarise(total=sum(no2,nox,no,pm10,pm2_5,o3,so2))
+```
+
+
+```{r}
+
+```
+
